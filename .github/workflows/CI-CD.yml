@@ -89,9 +89,10 @@ jobs:
             echo "Installing dependencies..."
             pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
 
-            # Start Flask application with nohup
+            # Start Flask application with nohup and disown the process
             echo "Starting Flask application..."
-            nohup python app.py &
+            nohup python app.py > flask.log 2>&1 &
+            disown  # Disown the process to allow it to continue after the SSH session ends
 
             # Check if Flask app started successfully
             sleep 5
