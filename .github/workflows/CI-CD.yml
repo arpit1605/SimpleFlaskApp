@@ -30,10 +30,11 @@ jobs:
           pip install -r requirements.txt  # Installs dependencies, including pytest from requirements.txt
 
       - name: Run unit tests
+        working-directory: ${{ github.workspace }}  # Ensure pytest runs from the repo root
         run: |
           pytest  # Run the pytest tests
         env:
-          CI: true
+            CI: true
 
       - name: Build the application
         run: |
