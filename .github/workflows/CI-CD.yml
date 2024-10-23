@@ -34,19 +34,16 @@ jobs:
         run: |
           pytest  # Run the pytest tests
         env:
-            CI: true
+          CI: true
 
       - name: Build the application
         run: |
           echo "Building the application"  # Placeholder for future build commands
-          # For example, if you're using Docker, you might do something like:
-          # docker build -t your-app:latest .
 
   # Step 2: Deploy the latest code to EC2 Instance with Error Handling
   deploy-ec2:
     runs-on: ubuntu-latest  # The GitHub runner coordinates deployment but does not deploy itself
     needs: test-and-build  # Only runs if the test-and-build step succeeds
-    #if: github.ref == 'refs/heads/dev'
     steps:
       - name: Deploy the latest code to EC2 Instance
         run: |
@@ -61,54 +58,50 @@ jobs:
   
           # SSH into the EC2 instance and deploy the application
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_IP }} << 'EOF'
-          
-        # Your deployment steps here
-          #ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
-          
-          # Enable error handling
-          set -e
-          
-          # Logging the deployment process
-          LOG_FILE="~/SimpleFlaskApp/deploy.log"
-          exec > >(tee -a $LOG_FILE) 2>&1
-          
-          echo "Starting deployment..."
-          
-          # Ensure the directory exists or clone the repository
-          if [ ! -d "~/SimpleFlaskApp" ]; then
-            echo "Cloning repository..."
-            git clone https://github.com/arpit1605/SimpleFlaskApp.git || { echo "Git clone failed"; exit 1; }
-          fi
+            # Enable error handling
+            set -e
 
-          cd ~/SimpleFlaskApp
-          echo "Pulling latest changes from dev branch..."
-          git pull origin dev || { echo "Git pull failed"; exit 1; }
+            # Logging the deployment process
+            LOG_FILE="~/SimpleFlaskApp/deploy.log"
+            exec > >(tee -a $LOG_FILE) 2>&1
 
-          # Setting up virtual environment
-          echo "Setting up virtual environment..."
-          if [ -d "venv" ]; then
-            source venv/bin/activate
-          else
-            python3 -m venv venv && source venv/bin/activate || { echo "Failed to create/activate virtual environment"; exit 1; }
-          fi
+            echo "Starting deployment..."
 
-          # Install dependencies
-          echo "Installing dependencies..."
-          pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
+            # Ensure the directory exists or clone the repository
+            if [ ! -d "~/SimpleFlaskApp" ]; then
+              echo "Cloning repository..."
+              git clone https://github.com/arpit1605/SimpleFlaskApp.git || { echo "Git clone failed"; exit 1; }
+            fi
 
-          # Start Flask application with nohup
-          echo "Starting Flask application..."
-          nohup python app.py &
+            cd ~/SimpleFlaskApp
+            echo "Pulling latest changes from dev branch..."
+            git pull origin dev || { echo "Git pull failed"; exit 1; }
 
-          # Check if Flask app started successfully
-          sleep 5
-          if pgrep -f "python app.py" > /dev/null
-          then
-            echo "Flask application started successfully"
-          else
-            echo "Failed to start Flask application" >&2
-            exit 1
-          fi
+            # Setting up virtual environment
+            echo "Setting up virtual environment..."
+            if [ -d "venv" ]; then
+              source venv/bin/activate
+            else
+              python3 -m venv venv && source venv/bin/activate || { echo "Failed to create/activate virtual environment"; exit 1; }
+            fi
+
+            # Install dependencies
+            echo "Installing dependencies..."
+            pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
+
+            # Start Flask application with nohup
+            echo "Starting Flask application..."
+            nohup python app.py &
+
+            # Check if Flask app started successfully
+            sleep 5
+            if pgrep -f "python app.py" > /dev/null
+            then
+              echo "Flask application started successfully"
+            else
+              echo "Failed to start Flask application" >&2
+              exit 1
+            fi
 
           EOF
         env:
