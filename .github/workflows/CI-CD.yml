@@ -46,7 +46,7 @@ jobs:
   deploy-ec2:
     runs-on: ubuntu-latest  # The GitHub runner coordinates deployment but does not deploy itself
     needs: test-and-build  # Only runs if the test-and-build step succeeds
-    if: github.ref == 'refs/heads/dev'
+    #if: github.ref == 'refs/heads/dev'
     steps:
       - name: Deploy the latest code to EC2 Instance
         run: |
