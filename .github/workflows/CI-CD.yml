@@ -67,12 +67,15 @@ jobs:
 
             echo "Starting deployment..."
 
-            # Ensure the directory exists or clone the repository
-            if [ ! -d "~/SimpleFlaskApp" ]; then
+            # Remove and clone the repository in one step
+            if [ -d "~/SimpleFlaskApp" ]; then
+              echo "Removing existing SimpleFlaskApp directory and cloning fresh repository..."
+              rm -rf ~/SimpleFlaskApp && git clone https://github.com/arpit1605/SimpleFlaskApp.git || { echo "Failed to clean and clone repository"; exit 1; }
+            else
               echo "Cloning repository..."
               git clone https://github.com/arpit1605/SimpleFlaskApp.git || { echo "Git clone failed"; exit 1; }
             fi
-
+            
             cd ~/SimpleFlaskApp
             echo "Pulling latest changes from dev branch..."
             git pull origin dev || { echo "Git pull failed"; exit 1; }
