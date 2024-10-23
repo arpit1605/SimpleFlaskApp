@@ -50,10 +50,19 @@ jobs:
     steps:
       - name: Deploy the latest code to EC2 Instance
         run: |
+          # Create the .ssh directory
+          mkdir -p ~/.ssh
+  
+          # Write the private key to the id_rsa file
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
+  
+          # Ensure the private key has correct permissions
           chmod 600 ~/.ssh/id_rsa
+  
+          # SSH into the EC2 instance and deploy the application
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_IP }} << 'EOF'
           
+        # Your deployment steps here
           #ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
           
           # Enable error handling
