@@ -50,7 +50,11 @@ jobs:
     steps:
       - name: Deploy the latest code to EC2 Instance
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
+          echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_IP }} << 'EOF'
+          
+          #ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
           
           # Enable error handling
           set -e
