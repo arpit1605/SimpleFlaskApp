@@ -42,44 +42,45 @@ jobs:
 
   # Step 2: Deploy the latest code to EC2 Instance with Error Handling
   deploy-ec2:
-    runs-on: ubuntu-latest  # The GitHub runner coordinates deployment but does not deploy itself
-    needs: test-and-build  # Only runs if the test-and-build step succeeds
+    runs-on: ubuntu-latest
+    needs: test-and-build
     steps:
       - name: Deploy the latest code to EC2 Instance
         run: |
           # Create the .ssh directory
           mkdir -p ~/.ssh
-  
+    
           # Write the private key to the id_rsa file
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
-  
+    
           # Ensure the private key has correct permissions
           chmod 600 ~/.ssh/id_rsa
-  
+    
           # SSH into the EC2 instance and deploy the application
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_IP }} << 'EOF'
             # Enable error handling
             set -e
-
-            # Logging the deployment process
-            LOG_FILE="~/SimpleFlaskApp/deploy.log"
-            exec > >(tee -a $LOG_FILE) 2>&1
-
+  
             echo "Starting deployment..."
-
-            # Remove and clone the repository in one step
-            if [ -d "~/SimpleFlaskApp" ]; then
-              echo "Removing existing SimpleFlaskApp directory and cloning fresh repository..."
-              rm -rf ~/SimpleFlaskApp && git clone https://github.com/arpit1605/SimpleFlaskApp.git || { echo "Failed to clean and clone repository"; exit 1; }
-            else
-              echo "Cloning repository..."
-              git clone https://github.com/arpit1605/SimpleFlaskApp.git || { echo "Git clone failed"; exit 1; }
+  
+            # Remove the SimpleFlaskApp directory if it exists and clone the repository
+            if [ -d "/home/ubuntu/SimpleFlaskApp" ]; then
+              echo "Removing existing SimpleFlaskApp directory..."
+              rm -rf /home/ubuntu/SimpleFlaskApp || { echo "Failed to remove existing directory"; exit 1; }
             fi
-            
-            cd ~/SimpleFlaskApp
+  
+            # Clone the repository
+            git clone https://github.com/arpit1605/SimpleFlaskApp.git /home/ubuntu/SimpleFlaskApp || { echo "Git clone failed"; exit 1; }
+  
+            cd /home/ubuntu/SimpleFlaskApp
+  
+            # Set up logging after the directory is created
+            LOG_FILE="/home/ubuntu/SimpleFlaskApp/deploy.log"
+            exec > >(tee -a $LOG_FILE) 2>&1
+  
             echo "Pulling latest changes from dev branch..."
             git pull origin dev || { echo "Git pull failed"; exit 1; }
-
+  
             # Setting up virtual environment
             echo "Setting up virtual environment..."
             if [ -d "venv" ]; then
@@ -87,16 +88,16 @@ jobs:
             else
               python3 -m venv venv && source venv/bin/activate || { echo "Failed to create/activate virtual environment"; exit 1; }
             fi
-
+  
             # Install dependencies
             echo "Installing dependencies..."
             pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
-
-            # Start Flask application with nohup and disown the process
+  
+            # Start Flask application with nohup and disown it
             echo "Starting Flask application..."
             nohup python app.py > flask.log 2>&1 &
-            disown  # Disown the process to allow it to continue after the SSH session ends
-
+            disown
+  
             # Check if Flask app started successfully
             sleep 5
             if pgrep -f "python app.py" > /dev/null
@@ -106,7 +107,7 @@ jobs:
               echo "Failed to start Flask application" >&2
               exit 1
             fi
-
+  
           EOF
         env:
           EC2_IP: ${{ secrets.EC2_IP }}
