@@ -95,7 +95,7 @@ jobs:
   
             # Start Flask application with nohup and disown it
             echo "Starting Flask application..."
-            nohup python app.py --host=0.0.0.0 > flask.log 2>&1 &
+            nohup python /home/ubuntu/SimpleFlaskApp/app.py --host=0.0.0.0 > flask.log 2>&1 &
             disown
   
             # Check if Flask app started successfully
