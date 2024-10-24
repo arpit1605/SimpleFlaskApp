@@ -92,10 +92,13 @@ jobs:
             # Install dependencies
             echo "Installing dependencies..."
             pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
-  
+
+            # Provide execute permission to app.py
+            chmod +x app.py
+
             # Start Flask application with nohup and disown it
             echo "Starting Flask application..."
-            nohup python SimpleFlaskApp/app.py --host=0.0.0.0 > flask.log 2>&1 &
+            nohup python app.py --host=0.0.0.0 > flask.log 2>&1 &
             disown
   
             # Check if Flask app started successfully
