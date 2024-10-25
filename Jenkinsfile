@@ -1,5 +1,6 @@
 pipeline {
-    agent any
+    agent { label 'AkankshaNode' }
+
     environment {
         VENV_PATH = "venv" // Path to the virtual environment
     }
